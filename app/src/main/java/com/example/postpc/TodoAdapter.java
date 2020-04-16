@@ -8,24 +8,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
 public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView todo;
-        public ImageView check;
-
-        public ViewHolder(View view){
-            super(view);
-            todo = view.findViewById(R.id.todo_item);
-            check = view.findViewById(R.id.checkbox);
-        }
-    }
-
     private List<TODO> todoList;
+    private OnTodoListener mOnTodoListener;
 
     @NonNull
     @Override
@@ -37,26 +28,20 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
         View todoView = inflater.inflate(R.layout.layout_one_todo, parent, false);
 
         // Return a new holder instance
-        ViewHolder viewHolder = new ViewHolder(todoView);
+        ViewHolder viewHolder = new ViewHolder(todoView,mOnTodoListener);
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull TodoAdapter.ViewHolder holder, int position) {
         TODO todoItem = todoList.get(position);
-
-        // Set item views based on your views and data model
         TextView textView = holder.todo;
-        textView.setText(todoItem.description);
         ImageView imageView = holder.check;
-        if (todoItem.isDone)
+        textView.setText(todoItem.description);
+        if (todoItem.isDone==1)
         {
-            imageView.setImageResource(R.drawable.done);
+            imageView.setBackgroundResource(R.drawable.done);
         }
-        else{
-            imageView.setImageResource(R.drawable.undone);
-        }
-
     }
 
     @Override
@@ -64,10 +49,37 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
         return todoList.size();
     }
 
-    public TodoAdapter(List<TODO> todolist)
+    public TodoAdapter(List<TODO> todolist, OnTodoListener onTodoListener)
     {
         todoList = todolist;
+        this.mOnTodoListener = onTodoListener;
     }
+
+    public class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener{
+        public TextView todo;
+        public ImageView check;
+        OnTodoListener onTodoListener;
+
+        public ViewHolder(View view,OnTodoListener onTodoListener){
+            super(view);
+            todo = view.findViewById(R.id.todo_item);
+            check = view.findViewById(R.id.checkbox);
+            this.onTodoListener = onTodoListener;
+            view.setOnClickListener(this);
+        }
+
+
+        @Override
+        public void onClick(View v) {
+            onTodoListener.onTodoClick(getAdapterPosition(),check);
+
+        }
+    }
+    public interface OnTodoListener{
+        void onTodoClick(int pos,ImageView imageView);
+    }
+
+
 
 
 

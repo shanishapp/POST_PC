@@ -19,11 +19,12 @@
 
     <ImageView
         android:id="@+id/checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_marginStart="16dp"
         app:layout_constraintBottom_toBottomOf="@+id/todo_item"
         app:layout_constraintStart_toEndOf="@+id/todo_item"
         app:layout_constraintTop_toTopOf="@+id/todo_item"
-        app:srcCompat="@android:drawable/checkbox_off_background" />
+        android:background="@drawable/undone"
+        />
 </androidx.constraintlayout.widget.ConstraintLayout>

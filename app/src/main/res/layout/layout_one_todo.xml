@@ -8,23 +8,24 @@
 
     <TextView
         android:id="@+id/todo_item"
-        android:layout_width="334dp"
+        android:layout_width="0dp"
         android:layout_height="21dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="10dp"
         android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/checkbox"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.483" />
+        />
 
     <ImageView
         android:id="@+id/checkbox"
         android:layout_width="30dp"
         android:layout_height="30dp"
-        android:layout_marginStart="16dp"
-        app:layout_constraintBottom_toBottomOf="@+id/todo_item"
-        app:layout_constraintStart_toEndOf="@+id/todo_item"
-        app:layout_constraintTop_toTopOf="@+id/todo_item"
         android:background="@drawable/undone"
-        />
+        android:layout_marginRight="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

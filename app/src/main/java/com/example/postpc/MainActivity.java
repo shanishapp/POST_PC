@@ -5,11 +5,17 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -33,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     private Snackbar snackbar = null;
     private SharedPreferences sp = null;
     private TodoAdapter adapter = null;
+    private int current_pos = -1;
 
 
     final private String error_message = "you can't create an empty TODO item, oh silly!";
@@ -44,9 +51,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         initVariables(savedInstanceState);
+        Log.d("sizeoftodolist",String.valueOf(todoList.size()));
 
         adapter = new TodoAdapter(todoList,this);
 
@@ -74,6 +81,37 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             editText.setText("");
             adapter.notifyDataSetChanged();
         }
+    }
+
+    private void dialogShow()
+    {
+        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        final View dialogView = inflater.inflate(R.layout.dialog_delete_item, null);
+        Button yesButton = dialogView.findViewById(R.id.delete);
+        Button noButton  = dialogView.findViewById(R.id.cancel);
+
+        alert.setView(dialogView);
+        final AlertDialog alertDialog = alert.create();
+        yesButton.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (todoList.size() > current_pos)
+            {
+                todoList.remove(current_pos);
+                adapter.notifyDataSetChanged();
+            }
+         }
+        });
+        noButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alertDialog.cancel();
+            }
+        });
+        alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+        alertDialog.show();
     }
 
     private void initVariables(Bundle savedInstanceState)
@@ -107,13 +145,6 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
                 }
             }
         }
-
-//        if (savedInstanceState != null) {
-//            text = savedInstanceState.getString("text");
-//            editTextHint = savedInstanceState.getString("editTextHint");
-//            editText.setText(editTextHint);
-//            todoList = savedInstanceState.getParcelableArrayList("todolist");
-//        }
     }
 
     private void setOrientation(){
@@ -128,15 +159,10 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-        // Save UI state changes to the savedInstanceState.
-        // This bundle will be passed to onCreate if the process is
-        // killed and restarted.
-//        savedInstanceState.putString("text",text);
-//        savedInstanceState.putString("editTextHint", editTextHint);
-//        savedInstanceState.putParcelableArrayList("todolist",todoList);
+
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString("text", text); 	// insert an int
-        editor.putString("editTextHint", editTextHint); 	// insert a boolean
+        editor.putString("text", text);
+        editor.putString("editTextHint", editTextHint);
         String todoString="";
         String checkString="";
         for ( TODO todo: todoList)
@@ -151,11 +177,10 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
                 checkString = checkString.concat("yes-");
             }
         }
-        editor.putString("todoList", todoString); 	// insert a string
+        editor.putString("todoList", todoString);
         editor.putString("checkList",checkString);
+        editor.apply();
 
-        editor.apply();		// we ALWAYS need to call “apply” after editing!
-        // etc.
     }
 
     @Override
@@ -176,11 +201,10 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     @Override
     public void onLongTodoClick(int pos)
     {
-        if (todoList.size() > pos)
-        {
-            todoList.remove(pos);
-            adapter.notifyDataSetChanged();
-        }
+        current_pos = pos;
+        dialogShow();
     }
+
+
 
 }

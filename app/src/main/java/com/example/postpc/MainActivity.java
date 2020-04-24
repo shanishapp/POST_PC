@@ -6,8 +6,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,6 +19,7 @@ import android.widget.Toast;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoListener {
 
@@ -28,6 +31,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     private TODO todo = null;
     private View view = null;
     private Snackbar snackbar = null;
+    private SharedPreferences sp = null;
+    private TodoAdapter adapter = null;
+
 
     final private String error_message = "you can't create an empty TODO item, oh silly!";
     final private int snackbarDuration = Snackbar.LENGTH_SHORT;
@@ -37,9 +43,12 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         initVariables(savedInstanceState);
 
-        final TodoAdapter adapter = new TodoAdapter(todoList,this);
+        adapter = new TodoAdapter(todoList,this);
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,12 +84,36 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         button = findViewById(R.id.button);
         setOrientation();
 
-        if (savedInstanceState != null) {
-            text = savedInstanceState.getString("text");
-            editTextHint = savedInstanceState.getString("editTextHint");
-            editText.setText(editTextHint);
-            todoList = savedInstanceState.getParcelableArrayList("todolist");
+        text = sp.getString("text","");
+        editTextHint = sp.getString("editTextHint","");
+        editText.setText(editTextHint);
+        String todoString = sp.getString("todoList","");
+        String[] todoStringList = todoString.split("-");
+        String checkString = sp.getString("checkList","");
+        String[] checkStringList = checkString.split("-");
+        todoList = new ArrayList<>();
+
+        if (!todoString.equals(""))
+        {
+            for (int i = 0; i < todoStringList.length; i++)
+            {
+                if (checkStringList[i].equals("yes"))
+                {
+                    todoList.add(new TODO(todoStringList[i],1));
+                }
+                else
+                {
+                    todoList.add(new TODO(todoStringList[i],0));
+                }
+            }
         }
+
+//        if (savedInstanceState != null) {
+//            text = savedInstanceState.getString("text");
+//            editTextHint = savedInstanceState.getString("editTextHint");
+//            editText.setText(editTextHint);
+//            todoList = savedInstanceState.getParcelableArrayList("todolist");
+//        }
     }
 
     private void setOrientation(){
@@ -98,9 +131,30 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         // Save UI state changes to the savedInstanceState.
         // This bundle will be passed to onCreate if the process is
         // killed and restarted.
-        savedInstanceState.putString("text",text);
-        savedInstanceState.putString("editTextHint", editTextHint);
-        savedInstanceState.putParcelableArrayList("todolist",todoList);
+//        savedInstanceState.putString("text",text);
+//        savedInstanceState.putString("editTextHint", editTextHint);
+//        savedInstanceState.putParcelableArrayList("todolist",todoList);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString("text", text); 	// insert an int
+        editor.putString("editTextHint", editTextHint); 	// insert a boolean
+        String todoString="";
+        String checkString="";
+        for ( TODO todo: todoList)
+        {
+            todoString = todoString.concat(todo.description+"-");
+            if (todo.isDone == 0)
+            {
+                checkString = checkString.concat("no-");
+            }
+            else
+            {
+                checkString = checkString.concat("yes-");
+            }
+        }
+        editor.putString("todoList", todoString); 	// insert a string
+        editor.putString("checkList",checkString);
+
+        editor.apply();		// we ALWAYS need to call “apply” after editing!
         // etc.
     }
 
@@ -116,6 +170,16 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             int duration = Toast.LENGTH_SHORT;
             Toast toast = Toast.makeText(context, text, duration);
             toast.show();
+        }
+    }
+
+    @Override
+    public void onLongTodoClick(int pos)
+    {
+        if (todoList.size() > pos)
+        {
+            todoList.remove(pos);
+            adapter.notifyDataSetChanged();
         }
     }
 

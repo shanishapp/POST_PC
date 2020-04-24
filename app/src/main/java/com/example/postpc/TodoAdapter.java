@@ -1,11 +1,13 @@
 package com.example.postpc;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -55,7 +57,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
         this.mOnTodoListener = onTodoListener;
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener{
+    public class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener, View.OnLongClickListener{
         public TextView todo;
         public ImageView check;
         OnTodoListener onTodoListener;
@@ -66,6 +68,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
             check = view.findViewById(R.id.checkbox);
             this.onTodoListener = onTodoListener;
             view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
         }
 
 
@@ -74,9 +77,16 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
             onTodoListener.onTodoClick(getAdapterPosition(),check);
 
         }
+
+        @Override
+        public boolean onLongClick(View v) {
+            onTodoListener.onLongTodoClick(getAdapterPosition());
+            return true;
+        }
     }
     public interface OnTodoListener{
         void onTodoClick(int pos,ImageView imageView);
+        void onLongTodoClick(int pos);
     }
 
 

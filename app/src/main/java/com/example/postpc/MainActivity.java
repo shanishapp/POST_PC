@@ -36,6 +36,7 @@ import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoListener {
 

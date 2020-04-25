@@ -21,11 +21,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-
 import com.google.android.material.snackbar.Snackbar;
-
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoListener {
 
@@ -164,10 +161,16 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     {
         super.onSaveInstanceState(savedInstanceState);
 
+        saveData();
+
+    }
+
+    private void saveData()
+    {
         SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sp.edit();
         editor.putString("text", text);
-        editor.putString("editTextHint", editTextHint);
+        editor.putString("editTextHint", editText.getText().toString());
         String todoString="";
         String checkString="";
         for (int i=0; i<todoList.size(); i++)
@@ -186,10 +189,13 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         editor.putString("todoList", todoString);
         editor.putString("checkList",checkString);
 
-
-
         editor.commit();
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        saveData();
     }
 
     @Override

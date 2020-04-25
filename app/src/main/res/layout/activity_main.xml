@@ -10,27 +10,30 @@
 
     <EditText
         android:id="@+id/editText"
-        android:layout_width="291dp"
-        android:layout_height="36dp"
-        android:layout_marginLeft="20dp"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
         android:background="#FFFFFF"
         android:inputType="textPersonName"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/todo_recycler_view" />
+        app:layout_constraintTop_toBottomOf="@+id/todo_recycler_view"
+         />
 
     <Button
         android:id="@+id/button"
         android:layout_width="71dp"
         android:layout_height="39dp"
         android:layout_marginBottom="15dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
         android:background="@drawable/rounded_button_background"
         android:text="create"
         android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/editText" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/todo_recycler_view"

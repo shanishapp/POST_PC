@@ -23,6 +23,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/delete_button_rounded_background"
         android:layout_gravity="center_horizontal"
+        android:onClick="deleteTodo"
         android:text="YES" />
 
     <Button
@@ -32,5 +33,6 @@
         android:layout_gravity="center_horizontal"
         android:layout_height="wrap_content"
         android:background="@drawable/delete_button_rounded_background"
+        android:onClick="closeDialog"
         android:text="NO" />
 </LinearLayout>

@@ -40,7 +40,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
         TextView textView = holder.todo;
         ImageView imageView = holder.check;
         textView.setText(todoItem.description);
-        if (todoItem.isDone==1)
+        if (todoItem.isDone)
         {
             imageView.setBackgroundResource(R.drawable.done);
         }
@@ -88,6 +88,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
             return true;
         }
     }
+
     public interface OnTodoListener{
         void onTodoClick(int pos,ImageView imageView);
         void onLongTodoClick(int pos);

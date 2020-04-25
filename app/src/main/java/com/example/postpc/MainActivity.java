@@ -21,27 +21,43 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
-
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoListener {
 
-    private String text ;
     private EditText editText = null;
     private String editTextHint = "";
     private ArrayList<TODO> todoList = new ArrayList<>();
-    private Button button = null;
     private TODO todo = null;
     private View view = null;
     private Snackbar snackbar = null;
     private TodoAdapter adapter = null;
     private int current_pos = -1;
+    private AlertDialog alertDialog;
+    private SharedPreferences paramsFile;
+    private SharedPreferences todosFile;
+    private int uniqueID;
+
 
     final private String error_message = "you can't create an empty TODO item, oh silly!";
     final private int snackbarDuration = Snackbar.LENGTH_SHORT;
+    final private String todoListFileName = "todos";
+    final private String activityParamsFileName = "params";
+
 
 
     @Override
@@ -53,32 +69,59 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         initVariables();
         Log.d("sizeoftodolist",String.valueOf(todoList.size()));
 
-        adapter = new TodoAdapter(todoList,this);
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createTodo(adapter);
-
-            }
-        });
-
         RecyclerView rvContacts = (RecyclerView) findViewById(R.id.todo_recycler_view);
         rvContacts.setAdapter(adapter);
         rvContacts.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void createTodo(TodoAdapter adapter)
+    private void initVariables()
     {
-        text = editText.getText().toString();
+        view = findViewById(R.id.main_layout);
+        snackbar = Snackbar.make(view, error_message, snackbarDuration);
+
+        paramsFile = this.getSharedPreferences(activityParamsFileName,MODE_PRIVATE);
+        todosFile = this.getSharedPreferences(todoListFileName,MODE_PRIVATE);
+
+        editText = findViewById(R.id.editText);
+        editTextHint = paramsFile.getString("editTextHint","");
+        editText.setText(editTextHint);
+        uniqueID = paramsFile.getInt("uniqueID",0);
+
+        Gson gson = new Gson();
+        todoList = new ArrayList<>();
+        Map<String,?> todosJson = todosFile.getAll();
+        List<String> keys = new ArrayList<>(todosJson.keySet());
+        Collections.sort(keys,new StrComparator());
+        for (String key : keys) {
+            String value = todosJson.get(key).toString();
+            todoList.add(gson.fromJson(value,TODO.class));
+        }
+        adapter = new TodoAdapter(todoList,this);
+
+    }
+
+    public void createTodo(View v)
+    {
+        String text = editText.getText().toString();
         if (text.equals("")) {
             snackbar.show();
         } else {
-            todo = new TODO(text, 0);
+            todo = new TODO(text, false,uniqueID);
+            uniqueID += 1;
+            paramsFile.edit().putInt("uniqueID",uniqueID).apply();
             todoList.add(todo);
+            saveTodo(todo);
             editText.setText("");
+            paramsFile.edit().remove("editTextHint").apply();
             adapter.notifyItemInserted(todoList.lastIndexOf(todo));
         }
+    }
+
+    private void saveTodo(TODO todo)
+    {
+        Gson gson = new Gson();
+        String json = gson.toJson(todo);
+        todosFile.edit().putString(todo.id,json).apply();
     }
 
     private void dialogShow()
@@ -86,119 +129,38 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         final AlertDialog.Builder alert = new AlertDialog.Builder(this);
         LayoutInflater inflater = this.getLayoutInflater();
         final View dialogView = inflater.inflate(R.layout.dialog_delete_item, null);
-        Button yesButton = dialogView.findViewById(R.id.delete);
-        Button noButton  = dialogView.findViewById(R.id.cancel);
-
         alert.setView(dialogView);
-        final AlertDialog alertDialog = alert.create();
-        yesButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (todoList.size() > current_pos)
-            {
-                todoList.remove(current_pos);
-                adapter.notifyItemRemoved(current_pos);
-            }
-            alertDialog.cancel();
-        }
-        });
-        noButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.cancel();
-            }
-        });
-        alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
+        alertDialog = alert.create();
+        Objects.requireNonNull(alertDialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         alertDialog.show();
-    }
-
-    private void initVariables()
-    {
-        SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-        view = findViewById(R.id.main_layout);
-        snackbar = Snackbar.make(view, error_message, snackbarDuration);
-        editText = findViewById(R.id.editText);
-        button = findViewById(R.id.button);
-        //setOrientation();
-
-        text = sp.getString("text","");
-        editTextHint = sp.getString("editTextHint","");
-        editText.setText(editTextHint);
-        String todoString = sp.getString("todoList","");
-        String[] todoStringList = todoString.split("-");
-        String checkString = sp.getString("checkList","");
-        String[] checkStringList = checkString.split("-");
-        todoList = new ArrayList<>();
-
-        if (!todoString.equals(""))
-        {
-            for (int i = 0; i < todoStringList.length; i++)
-            {
-                if (checkStringList[i].equals("yes"))
-                {
-                    todoList.add(new TODO(todoStringList[i],1));
-                }
-                else
-                {
-                    todoList.add(new TODO(todoStringList[i],0));
-                }
-            }
-        }
-    }
-
-    private void setOrientation()
-    {
-        ConstraintLayout view = (ConstraintLayout)findViewById(R.id.main_layout);
-        int orientation = getResources().getConfiguration().orientation;
-        if(orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            view.setBackgroundResource (R.drawable.flowers_landscape);
-        } else {
-            view.setBackgroundResource (R.drawable.flowers);
-        }
     }
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState)
     {
         super.onSaveInstanceState(savedInstanceState);
+        saveData();
+    }
 
-        SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putString("text", text);
-        editor.putString("editTextHint", editTextHint);
-        String todoString="";
-        String checkString="";
-        for (int i=0; i<todoList.size(); i++)
-        {
-            TODO todo = todoList.get(i);
-            todoString = todoString.concat(todo.description+"-");
-            if (todo.isDone == 0)
-            {
-                checkString = checkString.concat("no-");
-            }
-            else
-            {
-                checkString = checkString.concat("yes-");
-            }
-        }
-        editor.putString("todoList", todoString);
-        editor.putString("checkList",checkString);
+    private void saveData()
+    {
+        paramsFile.edit().
+                putString("editTextHint", editText.getText().toString()).apply();
+    }
 
-
-
-        editor.commit();
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        saveData();
     }
 
     @Override
     public void onTodoClick(int pos, ImageView imageView)
     {
         TODO todoItem = todoList.get(pos);
-        if (todoItem.isDone == 0)
+        if (!todoItem.isDone)
         {
-            todoItem.isDone = 1;
+            todoItem.isDone = true;
             imageView.setBackgroundResource(R.drawable.done);
             Context context = getApplicationContext();
             CharSequence text = "TODO "+todoItem.description+" is now DONE. BOOM!";
@@ -206,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             Toast toast = Toast.makeText(context, text, duration);
             toast.show();
             adapter.notifyItemChanged(pos);
+            saveTodo(todoItem);
         }
     }
 
@@ -215,4 +178,31 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         current_pos = pos;
         dialogShow();
     }
+
+    public void deleteTodo(View v) {
+        if (todoList.size() > current_pos)
+        {
+            todosFile.edit().remove(todoList.get(current_pos).id).apply();
+            todoList.remove(current_pos);
+            adapter.notifyItemRemoved(current_pos);
+        }
+        closeDialog(v);
+    }
+
+    public void closeDialog(View view) {
+        alertDialog.cancel();
+    }
+
+    static class StrComparator implements Comparator<String>
+    {
+        public int compare(String s1, String s2)
+        {
+            if (Integer.valueOf(s1) >= Integer.valueOf(s2))
+            {
+                return 0;
+            }
+            return -1;
+        }
+    }
 }
+

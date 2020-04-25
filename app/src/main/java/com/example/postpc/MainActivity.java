@@ -37,22 +37,20 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     private TODO todo = null;
     private View view = null;
     private Snackbar snackbar = null;
-    private SharedPreferences sp = null;
     private TodoAdapter adapter = null;
     private int current_pos = -1;
-
 
     final private String error_message = "you can't create an empty TODO item, oh silly!";
     final private int snackbarDuration = Snackbar.LENGTH_SHORT;
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        initVariables(savedInstanceState);
+        initVariables();
         Log.d("sizeoftodolist",String.valueOf(todoList.size()));
 
         adapter = new TodoAdapter(todoList,this);
@@ -79,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             todo = new TODO(text, 0);
             todoList.add(todo);
             editText.setText("");
-            adapter.notifyDataSetChanged();
+            adapter.notifyItemInserted(todoList.lastIndexOf(todo));
         }
     }
 
@@ -99,9 +97,10 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             if (todoList.size() > current_pos)
             {
                 todoList.remove(current_pos);
-                adapter.notifyDataSetChanged();
+                adapter.notifyItemRemoved(current_pos);
             }
-         }
+            alertDialog.cancel();
+        }
         });
         noButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -114,13 +113,15 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         alertDialog.show();
     }
 
-    private void initVariables(Bundle savedInstanceState)
+    private void initVariables()
     {
+        SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
         view = findViewById(R.id.main_layout);
         snackbar = Snackbar.make(view, error_message, snackbarDuration);
         editText = findViewById(R.id.editText);
         button = findViewById(R.id.button);
-        setOrientation();
+        //setOrientation();
 
         text = sp.getString("text","");
         editTextHint = sp.getString("editTextHint","");
@@ -147,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         }
     }
 
-    private void setOrientation(){
+    private void setOrientation()
+    {
         ConstraintLayout view = (ConstraintLayout)findViewById(R.id.main_layout);
         int orientation = getResources().getConfiguration().orientation;
         if(orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -156,17 +158,21 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             view.setBackgroundResource (R.drawable.flowers);
         }
     }
+
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
+    public void onSaveInstanceState(Bundle savedInstanceState)
+    {
         super.onSaveInstanceState(savedInstanceState);
 
+        SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sp.edit();
         editor.putString("text", text);
         editor.putString("editTextHint", editTextHint);
         String todoString="";
         String checkString="";
-        for ( TODO todo: todoList)
+        for (int i=0; i<todoList.size(); i++)
         {
+            TODO todo = todoList.get(i);
             todoString = todoString.concat(todo.description+"-");
             if (todo.isDone == 0)
             {
@@ -179,12 +185,16 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         }
         editor.putString("todoList", todoString);
         editor.putString("checkList",checkString);
-        editor.apply();
+
+
+
+        editor.commit();
 
     }
 
     @Override
-    public void onTodoClick(int pos, ImageView imageView) {
+    public void onTodoClick(int pos, ImageView imageView)
+    {
         TODO todoItem = todoList.get(pos);
         if (todoItem.isDone == 0)
         {
@@ -195,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
             int duration = Toast.LENGTH_SHORT;
             Toast toast = Toast.makeText(context, text, duration);
             toast.show();
+            adapter.notifyItemChanged(pos);
         }
     }
 
@@ -204,7 +215,4 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         current_pos = pos;
         dialogShow();
     }
-
-
-
 }

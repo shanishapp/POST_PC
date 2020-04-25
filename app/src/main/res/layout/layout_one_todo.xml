@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="50dp"
-    android:background="@drawable/layout_rounded_background">
+    android:background="@drawable/item_holder_background">
 
     <TextView
         android:id="@+id/todo_item"

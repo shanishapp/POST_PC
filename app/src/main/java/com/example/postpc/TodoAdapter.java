@@ -44,6 +44,10 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
         {
             imageView.setBackgroundResource(R.drawable.done);
         }
+        else
+        {
+            imageView.setBackgroundResource(R.drawable.undone);
+        }
     }
 
     @Override

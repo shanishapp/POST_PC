@@ -39,8 +39,8 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
         TODO todoItem = todoList.get(position);
         TextView textView = holder.todo;
         ImageView imageView = holder.check;
-        textView.setText(todoItem.description);
-        if (todoItem.isDone==1)
+        textView.setText(todoItem.content);
+        if (todoItem.isDone)
         {
             imageView.setBackgroundResource(R.drawable.done);
         }
@@ -61,7 +61,7 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
         this.mOnTodoListener = onTodoListener;
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener, View.OnLongClickListener{
+    public class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener{
         public TextView todo;
         public ImageView check;
         OnTodoListener onTodoListener;
@@ -72,7 +72,6 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
             check = view.findViewById(R.id.checkbox);
             this.onTodoListener = onTodoListener;
             view.setOnClickListener(this);
-            view.setOnLongClickListener(this);
         }
 
 
@@ -81,16 +80,10 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
             onTodoListener.onTodoClick(getAdapterPosition(),check);
 
         }
-
-        @Override
-        public boolean onLongClick(View v) {
-            onTodoListener.onLongTodoClick(getAdapterPosition());
-            return true;
-        }
     }
+
     public interface OnTodoListener{
         void onTodoClick(int pos,ImageView imageView);
-        void onLongTodoClick(int pos);
     }
 
 

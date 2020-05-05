@@ -1,15 +1,11 @@
 package com.example.postpc;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -22,6 +18,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoListener {
@@ -36,6 +33,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     private Snackbar snackbar = null;
     private TodoAdapter adapter = null;
     private int current_pos = -1;
+    private DBManager dbManager;
 
     final private String error_message = "you can't create an empty TODO item, oh silly!";
     final private int snackbarDuration = Snackbar.LENGTH_SHORT;
@@ -46,6 +44,8 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        dbManager = DBManager.getInstance();
 
         initVariables();
         Log.d("sizeoftodolist",String.valueOf(todoList.size()));
@@ -65,94 +65,28 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         rvContacts.setLayoutManager(new LinearLayoutManager(this));
     }
 
+    private void initVariables()
+    {
+        SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        view = findViewById(R.id.main_layout);
+        snackbar = Snackbar.make(view, error_message, snackbarDuration);
+        editText = findViewById(R.id.editText);
+        button = findViewById(R.id.button);
+        text = sp.getString("text","");
+        editTextHint = sp.getString("editTextHint","");
+        editText.setText(editTextHint);
+        todoList = dbManager.getAllTodos();
+    }
+
     private void createTodo(TodoAdapter adapter)
     {
         text = editText.getText().toString();
         if (text.equals("")) {
             snackbar.show();
         } else {
-            todo = new TODO(text, 0);
-            todoList.add(todo);
+            todo = new TODO(text, false);
+            dbManager.addTodo(todo,adapter);
             editText.setText("");
-            adapter.notifyItemInserted(todoList.lastIndexOf(todo));
-        }
-    }
-
-    private void dialogShow()
-    {
-        final AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        LayoutInflater inflater = this.getLayoutInflater();
-        final View dialogView = inflater.inflate(R.layout.dialog_delete_item, null);
-        Button yesButton = dialogView.findViewById(R.id.delete);
-        Button noButton  = dialogView.findViewById(R.id.cancel);
-
-        alert.setView(dialogView);
-        final AlertDialog alertDialog = alert.create();
-        yesButton.setOnClickListener(new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (todoList.size() > current_pos)
-            {
-                todoList.remove(current_pos);
-                adapter.notifyItemRemoved(current_pos);
-            }
-            alertDialog.cancel();
-        }
-        });
-        noButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                alertDialog.cancel();
-            }
-        });
-        alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-        alertDialog.show();
-    }
-
-    private void initVariables()
-    {
-        SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-        view = findViewById(R.id.main_layout);
-        snackbar = Snackbar.make(view, error_message, snackbarDuration);
-        editText = findViewById(R.id.editText);
-        button = findViewById(R.id.button);
-        //setOrientation();
-
-        text = sp.getString("text","");
-        editTextHint = sp.getString("editTextHint","");
-        editText.setText(editTextHint);
-        String todoString = sp.getString("todoList","");
-        String[] todoStringList = todoString.split("-");
-        String checkString = sp.getString("checkList","");
-        String[] checkStringList = checkString.split("-");
-        todoList = new ArrayList<>();
-
-        if (!todoString.equals(""))
-        {
-            for (int i = 0; i < todoStringList.length; i++)
-            {
-                if (checkStringList[i].equals("yes"))
-                {
-                    todoList.add(new TODO(todoStringList[i],1));
-                }
-                else
-                {
-                    todoList.add(new TODO(todoStringList[i],0));
-                }
-            }
-        }
-    }
-
-    private void setOrientation()
-    {
-        ConstraintLayout view = (ConstraintLayout)findViewById(R.id.main_layout);
-        int orientation = getResources().getConfiguration().orientation;
-        if(orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            view.setBackgroundResource (R.drawable.flowers_landscape);
-        } else {
-            view.setBackgroundResource (R.drawable.flowers);
         }
     }
 
@@ -160,9 +94,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     public void onSaveInstanceState(Bundle savedInstanceState)
     {
         super.onSaveInstanceState(savedInstanceState);
-
         saveData();
-
     }
 
     private void saveData()
@@ -171,25 +103,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         SharedPreferences.Editor editor = sp.edit();
         editor.putString("text", text);
         editor.putString("editTextHint", editText.getText().toString());
-        String todoString="";
-        String checkString="";
-        for (int i=0; i<todoList.size(); i++)
-        {
-            TODO todo = todoList.get(i);
-            todoString = todoString.concat(todo.description+"-");
-            if (todo.isDone == 0)
-            {
-                checkString = checkString.concat("no-");
-            }
-            else
-            {
-                checkString = checkString.concat("yes-");
-            }
-        }
-        editor.putString("todoList", todoString);
-        editor.putString("checkList",checkString);
-
-        editor.commit();
+        editor.apply();
     }
 
     @Override
@@ -202,12 +116,12 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     public void onTodoClick(int pos, ImageView imageView)
     {
         TODO todoItem = todoList.get(pos);
-        if (todoItem.isDone == 0)
+        if (!todoItem.isDone)
         {
-            todoItem.isDone = 1;
+            dbManager.markTodoAsDone(todoItem);
             imageView.setBackgroundResource(R.drawable.done);
             Context context = getApplicationContext();
-            CharSequence text = "TODO "+todoItem.description+" is now DONE. BOOM!";
+            CharSequence text = "TODO "+todoItem.content+" is now DONE. BOOM!";
             int duration = Toast.LENGTH_SHORT;
             Toast toast = Toast.makeText(context, text, duration);
             toast.show();
@@ -215,10 +129,4 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         }
     }
 
-    @Override
-    public void onLongTodoClick(int pos)
-    {
-        current_pos = pos;
-        dialogShow();
-    }
 }

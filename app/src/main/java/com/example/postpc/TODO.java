@@ -1,44 +1,27 @@
 package com.example.postpc;
 
-import android.os.Parcel;
-import android.os.Parcelable;
+import com.google.firebase.Timestamp;
 
-public class TODO implements Parcelable {
+public class TODO {
 
-    public String description;
-    public int isDone;
+    public String content;
+    public boolean isDone;
+    public Timestamp creation_timestamp;
+    public Timestamp edit_timestamp;
+    public int id;
 
-    TODO(String d, int i) {
-        description = d;
-        isDone = i;
+    private static int idUniqueNumber = 0;
+
+    TODO(){}
+
+    TODO(String content, boolean isDone) {
+        this.content = content;
+        this.isDone = isDone;
+        creation_timestamp = Timestamp.now();
+        edit_timestamp = Timestamp.now();
+        this.id = idUniqueNumber;
+        idUniqueNumber +=1;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(description);
-        dest.writeInt(isDone);
-
-    }
-
-    public static final Parcelable.Creator<TODO> CREATOR
-            = new Parcelable.Creator<TODO>() {
-        public TODO createFromParcel(Parcel in) {
-            return new TODO(in);
-        }
-
-        public TODO[] newArray(int size) {
-            return new TODO[size];
-        }
-    };
-
-    private TODO(Parcel in)
-    {
-        description = in.readString();
-        isDone = in.readInt();
-    }
 }

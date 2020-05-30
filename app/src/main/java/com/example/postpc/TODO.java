@@ -8,19 +8,15 @@ public class TODO {
     public boolean isDone;
     public Timestamp creation_timestamp;
     public Timestamp edit_timestamp;
-    public int id;
-
-    private static int idUniqueNumber = 0;
+    public String id;
 
     TODO(){}
-
     TODO(String content, boolean isDone) {
         this.content = content;
-        this.isDone = isDone;
         creation_timestamp = Timestamp.now();
         edit_timestamp = Timestamp.now();
-        this.id = idUniqueNumber;
-        idUniqueNumber +=1;
+        this.id ="";
+        this.isDone = isDone;
     }
 
 

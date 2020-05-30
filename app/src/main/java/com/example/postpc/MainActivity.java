@@ -1,43 +1,36 @@
 package com.example.postpc;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
+public class MainActivity extends AppCompatActivity {
 
-public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTodoListener {
-
-    private String text ;
     private EditText editText = null;
-    private String editTextHint = "";
-    private ArrayList<TODO> todoList = new ArrayList<>();
-    private Button button = null;
-    private TODO todo = null;
-    private View view = null;
+    private ArrayList<TODO> todoList;
     private Snackbar snackbar = null;
     private TodoAdapter adapter = null;
-    private int current_pos = -1;
-    private DBManager dbManager;
+    private SharedPreferences paramsFile;
+    private TodoBoomApp app;
+
 
     final private String error_message = "you can't create an empty TODO item, oh silly!";
     final private int snackbarDuration = Snackbar.LENGTH_SHORT;
-
+    final private String activityParamsFileName = "params";
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -45,20 +38,7 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dbManager = DBManager.getInstance();
-
         initVariables();
-        Log.d("sizeoftodolist",String.valueOf(todoList.size()));
-
-        adapter = new TodoAdapter(todoList,this);
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                createTodo(adapter);
-
-            }
-        });
 
         RecyclerView rvContacts = (RecyclerView) findViewById(R.id.todo_recycler_view);
         rvContacts.setAdapter(adapter);
@@ -67,25 +47,26 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
 
     private void initVariables()
     {
+        app = (TodoBoomApp) getApplicationContext();
         SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        view = findViewById(R.id.main_layout);
+        View view = findViewById(R.id.main_layout);
         snackbar = Snackbar.make(view, error_message, snackbarDuration);
         editText = findViewById(R.id.editText);
-        button = findViewById(R.id.button);
-        text = sp.getString("text","");
-        editTextHint = sp.getString("editTextHint","");
+        String editTextHint = sp.getString("editTextHint", "");
         editText.setText(editTextHint);
-        todoList = dbManager.getAllTodos();
+        adapter = app.dbManager.adapter;
+        paramsFile = this.getSharedPreferences(activityParamsFileName,MODE_PRIVATE);
+
     }
 
-    private void createTodo(TodoAdapter adapter)
+    public void createTodo(View v)
     {
-        text = editText.getText().toString();
+        String text = editText.getText().toString();
         if (text.equals("")) {
             snackbar.show();
         } else {
-            todo = new TODO(text, false);
-            dbManager.addTodo(todo,adapter);
+            TODO todo = new TODO(text, false);
+            app.dbManager.addTodo(todo);
             editText.setText("");
         }
     }
@@ -99,11 +80,8 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
 
     private void saveData()
     {
-        SharedPreferences sp  = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putString("text", text);
-        editor.putString("editTextHint", editText.getText().toString());
-        editor.apply();
+        paramsFile.edit().
+                putString("editTextHint", editText.getText().toString()).apply();
     }
 
     @Override
@@ -113,20 +91,9 @@ public class MainActivity extends AppCompatActivity implements TodoAdapter.OnTod
     }
 
     @Override
-    public void onTodoClick(int pos, ImageView imageView)
-    {
-        TODO todoItem = todoList.get(pos);
-        if (!todoItem.isDone)
-        {
-            dbManager.markTodoAsDone(todoItem);
-            imageView.setBackgroundResource(R.drawable.done);
-            Context context = getApplicationContext();
-            CharSequence text = "TODO "+todoItem.content+" is now DONE. BOOM!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-            adapter.notifyItemChanged(pos);
-        }
+    protected void onResume() {
+        super.onResume();
+        todoList = app.dbManager.getAllTodos();
     }
-
 }
+

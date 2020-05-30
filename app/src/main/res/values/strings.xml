@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">POSTPC</string>
+    <string name="title_activity_todo_details">todo_details</string>
+    <string name="title_activity_done_todo_details">done_todo_details</string>
 </resources>

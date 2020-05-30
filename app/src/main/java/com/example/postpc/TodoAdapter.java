@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +20,38 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
 
     private List<TODO> todoList;
     private OnTodoListener mOnTodoListener;
+
+    public TodoAdapter(List<TODO> todolist, OnTodoListener onTodoListener)
+    {
+        todoList = todolist;
+        this.mOnTodoListener = onTodoListener;
+    }
+
+    public class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener{
+        public TextView todo;
+        public ImageView check;
+        OnTodoListener onTodoListener;
+
+
+        public ViewHolder(View view,OnTodoListener onTodoListener){
+            super(view);
+            todo = view.findViewById(R.id.todo_item);
+            check = view.findViewById(R.id.checkbox);
+            this.onTodoListener = onTodoListener;
+            view.setOnClickListener(this);
+        }
+
+
+        @Override
+        public void onClick(View v) {
+            onTodoListener.onTodoClick(getAdapterPosition(),check);
+
+        }
+    }
+
+    public interface OnTodoListener{
+        void onTodoClick(int pos,ImageView imageView);
+    }
 
     @NonNull
     @Override
@@ -54,44 +87,4 @@ public class TodoAdapter extends RecyclerView.Adapter<TodoAdapter.ViewHolder>{
     public int getItemCount() {
         return todoList.size();
     }
-
-    public TodoAdapter(List<TODO> todolist, OnTodoListener onTodoListener)
-    {
-        todoList = todolist;
-        this.mOnTodoListener = onTodoListener;
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder implements  View.OnClickListener{
-        public TextView todo;
-        public ImageView check;
-        OnTodoListener onTodoListener;
-
-        public ViewHolder(View view,OnTodoListener onTodoListener){
-            super(view);
-            todo = view.findViewById(R.id.todo_item);
-            check = view.findViewById(R.id.checkbox);
-            this.onTodoListener = onTodoListener;
-            view.setOnClickListener(this);
-        }
-
-
-        @Override
-        public void onClick(View v) {
-            onTodoListener.onTodoClick(getAdapterPosition(),check);
-
-        }
-    }
-
-    public interface OnTodoListener{
-        void onTodoClick(int pos,ImageView imageView);
-    }
-
-
-
-
-
-
-
-
-
 }

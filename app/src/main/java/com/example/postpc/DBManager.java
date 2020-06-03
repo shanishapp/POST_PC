@@ -133,15 +133,14 @@ public class DBManager implements TodoAdapter.OnTodoListener  {
 
     public ArrayList<TODO> getAllTodos()
     {
-        todoList.clear();
         collectionReference.get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
+                todoList.clear();
                 for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
                     TODO todo = documentSnapshot.toObject(TODO.class);
                     todoList.add(todo);
                 }
-                Log.d("sizeoftodolist",String.valueOf(todoList.size()));
                 adapter.notifyDataSetChanged();
             }
         }).addOnFailureListener(new OnFailureListener() {

@@ -90,5 +90,10 @@ public class MainActivity extends AppCompatActivity {
         saveData();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        todoList = app.dbManager.getAllTodos();
+    }
 }
 
